@@ -28,10 +28,8 @@ def reconstruct_3d(points1, points2, img_name1, img_name2):
 def triangulate(cam1, cam2, px1, px2, g):
     p1c1 = np.linalg.inv(cam1.calibration_matrix()) @ homogeneous(cam1.cam_from_img(px1))
     p2c2 = np.linalg.inv(cam2.calibration_matrix()) @ homogeneous(cam2.cam_from_img(px2))
-    p1w = p1c1 @ g.cam2_from_cam1.matrix()
-    p1w = p1w[:3] / p1w[-1]
+    p1w = g.cam2_from_cam1.matrix() @ homogeneous(p1c1)
     p2w = p2c2
-    #p2w = homogeneous(p2c2)
     d1 = p1w + g.cam2_from_cam1.translation
     d2 = p2w
     p3d = skew_lines_nearest_point(p1w, d1, p2w, d2)
