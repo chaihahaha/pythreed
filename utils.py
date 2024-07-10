@@ -109,8 +109,8 @@ def compute_intrinsic_matrix(fx, fy, cx, cy, s):
     K = np.array(K)
     return K
 
-def homogeneous(a):
-    return np.pad(a, [0,1], constant_values=1)
+def homogeneous(a, extra_dim=1):
+    return np.append(a, extra_dim)
 
 def skew_lines_nearest_point(p1, d1, p2, d2):
     d1 /= np.linalg.norm(d1)
