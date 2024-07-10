@@ -5,6 +5,7 @@ import pycolmap as pcm
 
 from pc_render import render_bunny
 from utils import homogeneous, skew_lines_nearest_point
+from img_match import matching_points
 
 def reconstruct_3d(points1, points2, img_name1, img_name2):
     N = len(points1)
@@ -66,5 +67,10 @@ def triangulate(cam1, cam2, px1, px2, g):
     return p3d
 
 if __name__ == '__main__':
-    bunny_np, points1, points2 = render_bunny()
-    reconstruct_3d(points1, points2, 'bunny1.png','bunny2.png')
+    #bunny_np, points1, points2 = render_bunny()
+    #reconstruct_3d(points1, points2, 'bunny1.png', 'bunny2.png')
+
+    img_name1 = 'test1.jpg'
+    img_name2 = 'test2.jpg'
+    points1, points2 = matching_points(img_name1, img_name2)
+    reconstruct_3d(points1, points2, img_name1, img_name2)
