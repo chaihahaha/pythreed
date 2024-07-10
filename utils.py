@@ -1,5 +1,5 @@
 import numpy as np
-import pycolmap as pcm
+#import pycolmap as pcm
 
 
 def compute_extrinsic_matrix(q, t):
