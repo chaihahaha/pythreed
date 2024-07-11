@@ -8,7 +8,7 @@ def matching_points(img_name1, img_name2):
     img2 = cv.imread(img_name2,cv.IMREAD_GRAYSCALE) # trainImage
     
     # Initiate ORB detector
-    orb = cv.ORB_create(nfeatures=10000, nlevels=10, patchSize=20)
+    orb = cv.ORB_create(nfeatures=10000)#, nlevels=10, patchSize=20)
     
     # find the keypoints and descriptors with ORB
     kp1, des1 = orb.detectAndCompute(img1,None)
@@ -36,4 +36,8 @@ def matching_points(img_name1, img_name2):
     points1 = np.array(points1)
     points2 = np.array(points2)
      
+    return points1, points2
+
+
+def matching_points_LoFTR(img_name1, img_name2):
     return points1, points2
