@@ -11,8 +11,8 @@ def reconstruct_3d(points1, points2, img_name1, img_name2):
     N = len(points1)
     cam1 = pcm.infer_camera_from_image(img_name1)
     cam2 = pcm.infer_camera_from_image(img_name2)
-    cam1.focal_length = 200
-    cam2.focal_length = 250
+    #cam1.focal_length = 200
+    #cam2.focal_length = 250
     matches = np.stack([np.arange(N)]*2, axis=1)
     options_2v = pcm.TwoViewGeometryOptions()
     options_2v.compute_relative_pose = True
