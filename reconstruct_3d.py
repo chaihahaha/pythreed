@@ -9,14 +9,14 @@ from utils import homogeneous, skew_lines_nearest_point
 from img_match_loftr import matching_points_LoFTR as matching_points
 import cv2 as cv
 
-def reconstruct_3d(points1, points2, img_name1, img_name2, rescale_ratio=1.0):
+def reconstruct_3d(points1, points2, img_name1, img_name2, resize_ratio=1.0):
     N = len(points1)
     cam1 = pcm.infer_camera_from_image(img_name1)
     cam2 = pcm.infer_camera_from_image(img_name2)
     #print('cam1', cam1.summary())
     #print('cam2', cam2.summary())
-    cam1.focal_length /= rescale_ratio
-    cam2.focal_length /= rescale_ratio
+    cam1.focal_length /= resize_ratio
+    cam2.focal_length /= resize_ratio
     matches = np.stack([np.arange(N)]*2, axis=1)
     options_2v = pcm.TwoViewGeometryOptions()
     options_2v.compute_relative_pose = True
@@ -107,4 +107,4 @@ if __name__ == '__main__':
     print('points1, points2')
     print(points1.shape, points2.shape)
     print(points1[:3], points2[:3])
-    reconstruct_3d(points1, points2, img_name1, img_name2, rescale_ratio=1/4)
+    reconstruct_3d(points1, points2, img_name1, img_name2, resize_ratio=1/4)
