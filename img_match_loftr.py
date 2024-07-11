@@ -39,8 +39,8 @@ if __name__ == '__main__':
     import cv2 as cv
     from PIL import Image
     import random
-    img_name1 = 'test11.jpg'
-    img_name2 = 'test22.jpg'
+    img_name1 = 'test111.jpg'
+    img_name2 = 'test222.jpg'
     img1 = cv.imread(img_name1,cv.IMREAD_GRAYSCALE) # queryImage
     img2 = cv.imread(img_name2,cv.IMREAD_GRAYSCALE) # trainImage
     points1, points2 = matching_points_LoFTR(img_name1, img_name2)

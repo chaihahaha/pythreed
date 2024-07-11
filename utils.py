@@ -120,5 +120,7 @@ def skew_lines_nearest_point(p1, d1, p2, d2):
     n2 = np.cross(d2, n)
     c1 = p1 + np.dot(p2 - p1, n2) * d1 / np.dot(d1, n2)
     c2 = p2 + np.dot(p1 - p2, n1) * d2 / np.dot(d2, n1)
-    return (c1+c2)/2
+    min_d = np.linalg.norm(c1 - c2)
+    valid = min_d < np.linalg.norm(p1 - p2)
+    return (c1+c2)/2, min_d, valid
 

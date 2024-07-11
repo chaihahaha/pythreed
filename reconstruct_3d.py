@@ -9,17 +9,21 @@ from utils import homogeneous, skew_lines_nearest_point
 from img_match_loftr import matching_points_LoFTR as matching_points
 import cv2 as cv
 
-def reconstruct_3d(points1, points2, img_name1, img_name2):
+def reconstruct_3d(points1, points2, img_name1, img_name2, rescale_ratio=1.0):
     N = len(points1)
     cam1 = pcm.infer_camera_from_image(img_name1)
     cam2 = pcm.infer_camera_from_image(img_name2)
-    #cam1.focal_length = 200
-    #cam2.focal_length = 250
+    #print('cam1', cam1.summary())
+    #print('cam2', cam2.summary())
+    cam1.focal_length /= rescale_ratio
+    cam2.focal_length /= rescale_ratio
     matches = np.stack([np.arange(N)]*2, axis=1)
     options_2v = pcm.TwoViewGeometryOptions()
     options_2v.compute_relative_pose = True
     options_2v.min_num_inliers = 8
     g = pcm.estimate_calibrated_two_view_geometry(cam1, points1, cam2, points2, matches, options_2v)
+    #print("E,F,H", g.E, g.F, g.H)
+    #print("2f1", g.cam2_from_cam1.summary())
     #pc = triangulate_my(cam1, cam2, points1, points2, g)
     pc = triangulate_cv(cam1, cam2, points1, points2, g)
 
@@ -87,8 +91,9 @@ def triangulate_my(cam1, cam2, points1, points2, g):
         o1 = g.cam2_from_cam1.translation
         o2 = np.zeros(3)
 
-        p3d = skew_lines_nearest_point(o1, d1, o2, d2)
-        pc.append(p3d)
+        p3d, min_d, valid = skew_lines_nearest_point(o1, d1, o2, d2)
+        if valid:
+            pc.append(p3d)
     pc = np.array(pc)
     return pc
 
@@ -96,7 +101,10 @@ if __name__ == '__main__':
     #bunny_np, points1, points2 = render_bunny()
     #reconstruct_3d(points1, points2, 'bunny1.png', 'bunny2.png')
 
-    img_name1 = 'test11.jpg'
-    img_name2 = 'test22.jpg'
+    img_name1 = 'test111.jpg'
+    img_name2 = 'test222.jpg'
     points1, points2 = matching_points(img_name1, img_name2)
-    reconstruct_3d(points1, points2, img_name1, img_name2)
+    print('points1, points2')
+    print(points1.shape, points2.shape)
+    print(points1[:3], points2[:3])
+    reconstruct_3d(points1, points2, img_name1, img_name2, rescale_ratio=1/4)
