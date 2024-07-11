@@ -32,7 +32,28 @@ def matching_points_LoFTR(img_name1, img_name2):
     #print(matcher.backbone(data['image0']))
     #print(torch.cat([data['image0'], data['image1']], dim=0).shape)
     matcher(data)
+
     return data['mkpts0_f'].cpu().numpy(), data['mkpts1_f'].cpu().numpy()
 
 if __name__ == '__main__':
-    matching_points_LoFTR('test1.jpg', 'test2.jpg')
+    import cv2 as cv
+    from PIL import Image
+    import random
+    img_name1 = 'test11.jpg'
+    img_name2 = 'test22.jpg'
+    img1 = cv.imread(img_name1,cv.IMREAD_GRAYSCALE) # queryImage
+    img2 = cv.imread(img_name2,cv.IMREAD_GRAYSCALE) # trainImage
+    points1, points2 = matching_points_LoFTR(img_name1, img_name2)
+    kp1 = []
+    kp2 = []
+    matches = []
+    n_kp = len(points1)
+    for i in range(n_kp):
+        x1, y1 = points1[i]
+        x2, y2 = points2[i]
+        kp1.append(cv.KeyPoint(x1, y1, 1))
+        kp2.append(cv.KeyPoint(x2, y2, 1))
+        matches.append(cv.DMatch(i, i, ((x1-x2)**2+(y1-y2)**2)**0.5))
+    img3 = cv.drawMatches(img1,kp1,img2,kp2,matches,None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    img3 = Image.fromarray(img3)
+    img3.save('match_loftr.png')
