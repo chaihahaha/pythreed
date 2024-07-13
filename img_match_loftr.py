@@ -17,6 +17,8 @@ def matching_points_LoFTR(img_name1, img_name2):
     config = get_cfg_defaults()
     config.merge_from_file(config_file_path)
     config_lower = lower_config(config)
+    if '_new' not in pretrained_ckpt_path:
+        config_lower['loftr']['coarse']['temp_bug_fix'] = False
     matcher = LoFTR(config_lower['loftr'])
     state_dict = torch.load(pretrained_ckpt_path, map_location='cpu')['state_dict']
     matcher.load_state_dict(state_dict, strict=True)

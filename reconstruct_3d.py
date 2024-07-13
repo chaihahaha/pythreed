@@ -41,6 +41,33 @@ def reconstruct_3d(points1, points2, img_name1, img_name2, resize_ratio=1.0):
     o3d.visualization.draw_geometries([pcd])
     return
 
+def reconstruct_3d_cv(points1, points2, img_name1, img_name2, resize_ratio=1.0):
+    cam1 = pcm.infer_camera_from_image(img_name1)
+    cam2 = pcm.infer_camera_from_image(img_name2)
+    cam1.focal_length /= resize_ratio
+    cam2.focal_length /= resize_ratio
+    points1, points2 = matching_points(img_name1, img_name2)
+    E, _ = cv.findEssentialMat(points1, points2, cam1.calibration_matrix())
+    U, _, V = np.linalg.svd(E)
+    W = np.reshape([0,1,0,-1,0,0,0,0,1], [3, 3])
+    if np.linalg.det(U) < 0:
+        U *= -1
+    if np.linalg.det(V) < 0:
+        V *= -1
+    R = U@W.T@V
+    t = U[:, 2:3]
+    t /= np.linalg.norm(t)
+    Rt = np.hstack([R, t])
+    P1 = cam1.calibration_matrix() @ np.eye(3, 4)
+    P2 = cam1.calibration_matrix() @ Rt
+    p4d = cv.triangulatePoints(P1, P2, points1.T, points2.T)
+    pc = (p4d[:3]/p4d[3]).T
+    pc = np.array(pc)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pc)
+    o3d.visualization.draw_geometries([pcd])
+    return
+
 def triangulate_cv(cam1, cam2, points1, points2, g):
     # cam1: pycolmap.Camera
     # cam2: pycolmap.Camera
@@ -69,17 +96,17 @@ def triangulate_my(cam1, cam2, points1, points2, g):
     points1 = np.array(points1)
     points2 = np.array(points2)
 
-    ## solution1 (using proj matrix):
-    #P1 = cam1.calibration_matrix() @ np.hstack([np.eye(3), np.zeros([3,1])])
-    #P2 = cam2.calibration_matrix() @ g.cam2_from_cam1.matrix()
-    #R1 = P1[:3,:3]
-    #t1 = P1[:3,3]
-    #R2 = P2[:3,:3]
-    #t2 = P2[:3,3]
-    #d1 = (np.linalg.pinv(R1) @ homogeneous(points1).T).T
-    #d2 = (np.linalg.pinv(R2) @ homogeneous(points2).T).T
-    #o1 = np.reshape(-np.linalg.pinv(R1) @ t1, [1, 3])
-    #o2 = np.reshape(-np.linalg.pinv(R2) @ t2, [1, 3])
+    # solution1 (using proj matrix):
+    P1 = cam1.calibration_matrix() @ np.hstack([np.eye(3), np.zeros([3,1])])
+    P2 = cam2.calibration_matrix() @ g.cam2_from_cam1.matrix()
+    R1 = P1[:3,:3]
+    t1 = P1[:3,3]
+    R2 = P2[:3,:3]
+    t2 = P2[:3,3]
+    d1 = (np.linalg.pinv(R1) @ homogeneous(points1).T).T
+    d2 = (np.linalg.pinv(R2) @ homogeneous(points2).T).T
+    o1 = np.reshape(-np.linalg.pinv(R1) @ t1, [1, 3])
+    o2 = np.reshape(-np.linalg.pinv(R2) @ t2, [1, 3])
 
     ## solution2 (using cam 1 coord):
     #R2f1 = g.cam2_from_cam1.matrix()[:3,:3]
@@ -88,7 +115,7 @@ def triangulate_my(cam1, cam2, points1, points2, g):
     #d1 = p1c1
     #d2 = (np.linalg.inv(R2f1) @ p2c2.T).T
     #o1 = np.zeros([1, 3])
-    #o2 = np.reshape(-np.linalg.inv(R2f1) @ g.cam2_from_cam1.translation, [1, 3])
+    #o2 = np.reshape(-R2f1.T @ g.cam2_from_cam1.translation, [1, 3])
 
     ## solution3 (using cam 2 coord):
     #R2f1 = g.cam2_from_cam1.matrix()[:3,:3]
@@ -113,4 +140,4 @@ if __name__ == '__main__':
     print('points1, points2')
     print(points1.shape, points2.shape)
     print(points1[:3], points2[:3])
-    reconstruct_3d(points1, points2, img_name1, img_name2, resize_ratio=1/4)
+    reconstruct_3d_cv(points1, points2, img_name1, img_name2, resize_ratio=1/4)
