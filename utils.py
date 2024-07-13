@@ -110,17 +110,27 @@ def compute_intrinsic_matrix(fx, fy, cx, cy, s):
     return K
 
 def homogeneous(a, extra_dim=1):
-    return np.append(a, extra_dim)
+    assert len(a.shape) == 2
+    assert a.shape[1] <= 3
+    N, D = a.shape
+    return np.hstack([a, np.ones([N, 1])*extra_dim])
 
 def skew_lines_nearest_point(p1, d1, p2, d2):
-    d1 /= np.linalg.norm(d1)
-    d2 /= np.linalg.norm(d2)
+    assert len(p1.shape) == 2
+    assert len(p2.shape) == 2
+    assert len(d1.shape) == 2
+    assert len(d2.shape) == 2
+    assert p1.shape[1] == p2.shape[1] == d1.shape[1] == d2.shape[1]
+    N, D = p1.shape
+
+    d1 /= np.linalg.norm(d1, axis=-1, keepdims=True)
+    d2 /= np.linalg.norm(d2, axis=-1, keepdims=True)
     n = np.cross(d1, d2)
     n1 = np.cross(d1, n)
     n2 = np.cross(d2, n)
-    c1 = p1 + np.dot(p2 - p1, n2) * d1 / np.dot(d1, n2)
-    c2 = p2 + np.dot(p1 - p2, n1) * d2 / np.dot(d2, n1)
-    min_d = np.linalg.norm(c1 - c2)
-    valid = min_d < np.linalg.norm(p1 - p2)
+    c1 = p1 + np.sum((p2 - p1) * n2, axis=-1, keepdims=True) * d1 / np.sum(d1 * n2, axis=-1, keepdims=True)
+    c2 = p2 + np.sum((p1 - p2) * n1, axis=-1, keepdims=True) * d2 / np.sum(d2 * n1, axis=-1, keepdims=True)
+    min_d = np.linalg.norm(c1 - c2, axis=-1, keepdims=True)
+    valid = min_d < np.linalg.norm(p1 - p2, axis=-1, keepdims=True)
     return (c1+c2)/2, min_d, valid
 
