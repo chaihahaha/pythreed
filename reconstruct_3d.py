@@ -47,16 +47,10 @@ def reconstruct_3d_cv(points1, points2, img_name1, img_name2, resize_ratio=1.0):
     cam1.focal_length /= resize_ratio
     cam2.focal_length /= resize_ratio
     points1, points2 = matching_points(img_name1, img_name2)
-    E, _ = cv.findEssentialMat(points1, points2, cam1.calibration_matrix())
-    U, _, V = np.linalg.svd(E)
-    W = np.reshape([0,1,0,-1,0,0,0,0,1], [3, 3])
-    if np.linalg.det(U) < 0:
-        U *= -1
-    if np.linalg.det(V) < 0:
-        V *= -1
-    R = U@W.T@V
-    t = U[:, 2:3]
-    t /= np.linalg.norm(t)
+    K = cam1.calibration_matrix()
+    E, mask = cv.findEssentialMat(points1, points2, K)
+    inliers1, inliers2 = points1[mask], points2[mask]
+    _, R, t, _ = cv.recoverPose(E, inliers1, inliers2, K)
     Rt = np.hstack([R, t])
     P1 = cam1.calibration_matrix() @ np.eye(3, 4)
     P2 = cam1.calibration_matrix() @ Rt
